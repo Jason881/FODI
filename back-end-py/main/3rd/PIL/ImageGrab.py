@@ -72,16 +72,14 @@ def grabclipboard():
     if sys.platform == "darwin":
         fh, filepath = tempfile.mkstemp(".jpg")
         os.close(fh)
+        script = ["osascript"]
         commands = [
-            'set theFile to (open for access POSIX file "'
-            + filepath
-            + '" with write permission)',
+            f'set theFile to (open for access POSIX file "{filepath}" with write permission)',
             "try",
             "    write (the clipboard as JPEG picture) to theFile",
             "end try",
             "close access theFile",
         ]
-        script = ["osascript"]
         for command in commands:
             script += ["-e", command]
         subprocess.call(script)

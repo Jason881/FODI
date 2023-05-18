@@ -71,7 +71,7 @@ class PSDraw:
         """
         if font not in self.isofont:
             # reencode font
-            self._fp_write("/PSDraw-{} ISOLatin1Encoding /{} E\n".format(font, font))
+            self._fp_write(f"/PSDraw-{font} ISOLatin1Encoding /{font} E\n")
             self.isofont[font] = 1
         # rough
         self._fp_write("/F0 %d /PSDraw-%s F\n" % (size, font))
@@ -114,10 +114,7 @@ class PSDraw:
         """Draw a PIL image, centered in the given box."""
         # default resolution depends on mode
         if not dpi:
-            if im.mode == "1":
-                dpi = 200  # fax
-            else:
-                dpi = 100  # greyscale
+            dpi = 200 if im.mode == "1" else 100
         # image size (on paper)
         x = im.size[0] * 72 / dpi
         y = im.size[1] * 72 / dpi

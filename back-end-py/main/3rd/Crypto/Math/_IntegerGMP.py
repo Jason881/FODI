@@ -128,11 +128,11 @@ class _GMP(object):
 
     def __getattr__(self, name):
         if name.startswith("mpz_"):
-            func_name = "__gmpz_" + name[4:]
+            func_name = f"__gmpz_{name[4:]}"
         elif name.startswith("gmp_"):
-            func_name = "__gmp_" + name[4:]
+            func_name = f"__gmp_{name[4:]}"
         else:
-            raise AttributeError("Attribute %s is invalid" % name)
+            raise AttributeError(f"Attribute {name} is invalid")
         func = getattr(lib, func_name)
         setattr(self, name, func)
         return func
@@ -183,7 +183,7 @@ class IntegerGMP(IntegerBase):
         return str(int(self))
 
     def __repr__(self):
-        return "Integer(%s)" % str(self)
+        return f"Integer({str(self)})"
 
     # Only Python 2.x
     def __hex__(self):
@@ -511,10 +511,7 @@ class IntegerGMP(IntegerBase):
         if pos < 0:
             raise ValueError("negative shift count")
         if pos > 65536:
-            if self < 0:
-                return -1
-            else:
-                return 0
+            return -1 if self < 0 else 0
         _gmp.mpz_tdiv_q_2exp(result._mpz_p,
                              self._mpz_p,
                              c_ulong(int(pos)))
@@ -524,10 +521,7 @@ class IntegerGMP(IntegerBase):
         if pos < 0:
             raise ValueError("negative shift count")
         if pos > 65536:
-            if self < 0:
-                return -1
-            else:
-                return 0
+            return -1 if self < 0 else 0
         _gmp.mpz_tdiv_q_2exp(self._mpz_p,
                              self._mpz_p,
                              c_ulong(int(pos)))
@@ -558,10 +552,9 @@ class IntegerGMP(IntegerBase):
             raise ValueError("no bit representation for negative values")
         if n < 0:
             raise ValueError("negative bit count")
-        if n > 65536:
-            return 0
-        return bool(_gmp.mpz_tstbit(self._mpz_p,
-                                    c_ulong(int(n))))
+        return (
+            0 if n > 65536 else bool(_gmp.mpz_tstbit(self._mpz_p, c_ulong(int(n))))
+        )
 
     # Extra
     def is_odd(self):
@@ -646,12 +639,10 @@ class IntegerGMP(IntegerBase):
         if comp < 0:
             raise ValueError("Modulus must be positive")
 
-        result = _gmp.mpz_invert(self._mpz_p,
-                                 self._mpz_p,
-                                 modulus._mpz_p)
-        if not result:
+        if result := _gmp.mpz_invert(self._mpz_p, self._mpz_p, modulus._mpz_p):
+            return self
+        else:
             raise ValueError("No inverse value can be computed")
-        return self
 
     def inverse(self, modulus):
         result = IntegerGMP(self)

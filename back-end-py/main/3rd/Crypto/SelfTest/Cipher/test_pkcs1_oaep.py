@@ -424,14 +424,14 @@ class TestVectorsWycheproof(unittest.TestCase):
                 mgf = lambda x,y: MGF1(x, y, SHA512)
             else:
                 raise ValueError("Unknown mgf/sha " + group['mgfSha'])
-        
+
             for test in group['tests']:
                 tv = TestVector()
 
                 tv.rsa_key = rsa_key
                 tv.hash_mod = hash_mod
                 tv.mgf = mgf
-                tv.algo = "%s with MGF1/%s" % (group['sha'], group['mgfSha'])
+                tv.algo = f"{group['sha']} with MGF1/{group['mgfSha']}"
 
                 tv.id = test['tcId']
                 tv.comment = test['comment']
@@ -473,10 +473,10 @@ class TestVectorsWycheproof(unittest.TestCase):
     def warn(self, tv):
         if tv.warning and self._wycheproof_warnings:
             import warnings
-            warnings.warn("Wycheproof warning: %s (%s)" % (self._id, tv.comment))
+            warnings.warn(f"Wycheproof warning: {self._id} ({tv.comment})")
 
     def test_decrypt(self, tv):
-        self._id = "Wycheproof Decrypt %s Test #%s" % (tv.algo, tv.id)
+        self._id = f"Wycheproof Decrypt {tv.algo} Test #{tv.id}"
 
         cipher = PKCS.new(tv.rsa_key, hashAlgo=tv.hash_mod, mgfunc=tv.mgf, label=tv.label)
         try:

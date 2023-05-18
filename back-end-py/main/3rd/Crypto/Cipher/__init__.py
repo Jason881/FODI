@@ -57,8 +57,8 @@ def _create_cipher(factory, key, mode, *args, **kwargs):
 
     modes = dict(_modes)
     if kwargs.pop("add_aes_modes", False):
-        modes.update(_extra_modes)
-    if not mode in modes:
+        modes |= _extra_modes
+    if mode not in modes:
         raise ValueError("Mode not supported")
 
     if args:
@@ -71,7 +71,7 @@ def _create_cipher(factory, key, mode, *args, **kwargs):
                 raise TypeError("Too many arguments for this mode")
             kwargs["IV"] = args[0]
         elif mode == 6:
-            if len(args) > 0:
+            if args:
                 raise TypeError("Too many arguments for this mode")
         elif mode == 1:
             raise TypeError("IV is not meaningful for the ECB mode")

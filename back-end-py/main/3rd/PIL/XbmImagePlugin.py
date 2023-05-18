@@ -50,10 +50,7 @@ class XbmImageFile(ImageFile.ImageFile):
 
     def _open(self):
 
-        m = xbm_head.match(self.fp.read(512))
-
-        if m:
-
+        if m := xbm_head.match(self.fp.read(512)):
             xsize = int(m.group("width"))
             ysize = int(m.group("height"))
 
@@ -69,13 +66,12 @@ class XbmImageFile(ImageFile.ImageFile):
 def _save(im, fp, filename):
 
     if im.mode != "1":
-        raise OSError("cannot write mode %s as XBM" % im.mode)
+        raise OSError(f"cannot write mode {im.mode} as XBM")
 
     fp.write(("#define im_width %d\n" % im.size[0]).encode("ascii"))
     fp.write(("#define im_height %d\n" % im.size[1]).encode("ascii"))
 
-    hotspot = im.encoderinfo.get("hotspot")
-    if hotspot:
+    if hotspot := im.encoderinfo.get("hotspot"):
         fp.write(("#define im_x_hot %d\n" % hotspot[0]).encode("ascii"))
         fp.write(("#define im_y_hot %d\n" % hotspot[1]).encode("ascii"))
 

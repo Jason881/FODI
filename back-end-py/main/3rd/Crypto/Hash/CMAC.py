@@ -64,12 +64,12 @@ class CMAC(object):
         self._update_after_digest = update_after_digest
 
         # Section 5.3 of NIST SP 800 38B and Appendix B
-        if bs == 8:
-            const_Rb = 0x1B
-            self._max_size = 8 * (2 ** 21)
-        elif bs == 16:
+        if bs == 16:
             const_Rb = 0x87
             self._max_size = 16 * (2 ** 48)
+        elif bs == 8:
+            const_Rb = 0x1B
+            self._max_size = 8 * (2 ** 21)
         else:
             raise TypeError("CMAC requires a cipher with a block size"
                             " of 8 or 16 bytes, not %d" % bs)
@@ -80,10 +80,7 @@ class CMAC(object):
                                   ciphermod.MODE_ECB,
                                   **self._cipher_params)
         L = self._ecb.encrypt(zero_block)
-        if bord(L[0]) & 0x80:
-            self._k1 = _shift_bytes(L, const_Rb)
-        else:
-            self._k1 = _shift_bytes(L)
+        self._k1 = _shift_bytes(L, const_Rb) if bord(L[0]) & 0x80 else _shift_bytes(L)
         if bord(self._k1[0]) & 0x80:
             self._k2 = _shift_bytes(self._k1, const_Rb)
         else:
@@ -155,10 +152,7 @@ class CMAC(object):
             return
 
         ct = self._cbc.encrypt(data_block)
-        if len(data_block) == bs:
-            second_last = self._last_ct
-        else:
-            second_last = ct[-bs*2:-bs]
+        second_last = self._last_ct if len(data_block) == bs else ct[-bs*2:-bs]
         self._last_ct = ct[-bs:]
         self._last_pt = strxor(second_last, data_block[-bs:])
 

@@ -220,30 +220,29 @@ class DerObject(object):
                 return self
 
         def _decodeFromStream(self, s, strict):
-                """Decode a complete DER element from a file."""
+            """Decode a complete DER element from a file."""
 
-                idOctet = s.read_byte()
-                if self._tag_octet is not None:
-                    if idOctet != self._tag_octet:
-                        raise ValueError("Unexpected DER tag")
-                else:
-                    self._tag_octet = idOctet
-                length = self._decodeLen(s)
-                self.payload = s.read(length)
+            idOctet = s.read_byte()
+            if self._tag_octet is None:
+                self._tag_octet = idOctet
+            elif idOctet != self._tag_octet:
+                raise ValueError("Unexpected DER tag")
+            length = self._decodeLen(s)
+            self.payload = s.read(length)
 
-                # In case of an EXTERNAL tag, further decode the inner
-                # element.
-                if hasattr(self, "_inner_tag_octet"):
-                    p = BytesIO_EOF(self.payload)
-                    inner_octet = p.read_byte()
-                    if inner_octet != self._inner_tag_octet:
-                        raise ValueError("Unexpected internal DER tag")
-                    length = self._decodeLen(p)
-                    self.payload = p.read(length)
+            # In case of an EXTERNAL tag, further decode the inner
+            # element.
+            if hasattr(self, "_inner_tag_octet"):
+                p = BytesIO_EOF(self.payload)
+                inner_octet = p.read_byte()
+                if inner_octet != self._inner_tag_octet:
+                    raise ValueError("Unexpected internal DER tag")
+                length = self._decodeLen(p)
+                self.payload = p.read(length)
 
-                    # There shouldn't be other bytes left
-                    if p.remaining_data() > 0:
-                        raise ValueError("Unexpected extra data after the DER structure")
+                # There shouldn't be other bytes left
+                if p.remaining_data() > 0:
+                    raise ValueError("Unexpected extra data after the DER structure")
 
 
 class DerInteger(DerObject):
@@ -385,7 +384,7 @@ class DerSequence(DerObject):
         """
 
         def __init__(self, startSeq=None, implicit=None):
-                """Initialize the DER object as a SEQUENCE.
+            """Initialize the DER object as a SEQUENCE.
 
                 :Parameters:
                   startSeq : Python sequence
@@ -397,11 +396,8 @@ class DerSequence(DerObject):
                     It overrides the universal tag for SEQUENCE (16).
                 """
 
-                DerObject.__init__(self, 0x10, b'', implicit, True)
-                if startSeq is None:
-                    self._seq = []
-                else:
-                    self._seq = startSeq
+            DerObject.__init__(self, 0x10, b'', implicit, True)
+            self._seq = [] if startSeq is None else startSeq
 
         # A few methods to make it behave like a python sequence
 
@@ -744,10 +740,7 @@ class DerBitString(DerObject):
         DerObject.__init__(self, 0x03, b'', implicit, False, explicit)
 
         # The bitstring value (packed)
-        if isinstance(value, DerObject):
-            self.value = value.encode()
-        else:
-            self.value = value
+        self.value = value.encode() if isinstance(value, DerObject) else value
 
     def encode(self):
         """Return the DER BIT STRING, fully encoded as a
@@ -781,11 +774,7 @@ class DerBitString(DerObject):
         if self.payload and bord(self.payload[0]) != 0:
             raise ValueError("Not a valid BIT STRING")
 
-        # Fill-up self.value
-        self.value = b''
-        # Remove padding count byte
-        if self.payload:
-            self.value = self.payload[1:]
+        self.value = self.payload[1:] if self.payload else b''
 
 
 class DerSetOf(DerObject):
@@ -907,9 +896,8 @@ class DerSetOf(DerObject):
             # Verify that all members are of the same type
             if setIdOctet < 0:
                 setIdOctet = der._tag_octet
-            else:
-                if setIdOctet != der._tag_octet:
-                    raise ValueError("Not all elements are of the same DER type")
+            elif setIdOctet != der._tag_octet:
+                raise ValueError("Not all elements are of the same DER type")
 
             # Parse INTEGERs differently
             if setIdOctet != 0x02:

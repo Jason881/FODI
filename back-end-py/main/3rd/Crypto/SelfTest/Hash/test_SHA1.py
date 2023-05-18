@@ -71,10 +71,9 @@ def get_tests(config={}):
             tv.msg = b""
         test_data.append((hexlify(tv.md), tv.msg, tv.desc))
 
-    tests = make_hash_tests(SHA1, "SHA1", test_data,
-                            digest_size=20,
-                            oid="1.3.14.3.2.26")
-    return tests
+    return make_hash_tests(
+        SHA1, "SHA1", test_data, digest_size=20, oid="1.3.14.3.2.26"
+    )
 
 if __name__ == '__main__':
     import unittest

@@ -17,8 +17,8 @@ modules = {
 
 
 def check_module(feature):
-    if not (feature in modules):
-        raise ValueError("Unknown module %s" % feature)
+    if feature not in modules:
+        raise ValueError(f"Unknown module {feature}")
 
     module = modules[feature]
 
@@ -38,11 +38,11 @@ codecs = {"jpg": "jpeg", "jpg_2000": "jpeg2k", "zlib": "zip", "libtiff": "libtif
 
 def check_codec(feature):
     if feature not in codecs:
-        raise ValueError("Unknown codec %s" % feature)
+        raise ValueError(f"Unknown codec {feature}")
 
     codec = codecs[feature]
 
-    return codec + "_encoder" in dir(Image.core)
+    return f"{codec}_encoder" in dir(Image.core)
 
 
 def get_supported_codecs():
@@ -62,7 +62,7 @@ features = {
 
 def check_feature(feature):
     if feature not in features:
-        raise ValueError("Unknown feature %s" % feature)
+        raise ValueError(f"Unknown feature {feature}")
 
     module, flag = features[feature]
 
@@ -84,7 +84,7 @@ def check(feature):
         return check_codec(feature)
     if feature in features:
         return check_feature(feature)
-    warnings.warn("Unknown feature '%s'." % feature, stacklevel=2)
+    warnings.warn(f"Unknown feature '{feature}'.", stacklevel=2)
     return False
 
 
@@ -102,18 +102,18 @@ def pilinfo(out=None, supported_formats=True):
     Image.init()
 
     print("-" * 68, file=out)
-    print("Pillow {}".format(PIL.__version__), file=out)
+    print(f"Pillow {PIL.__version__}", file=out)
     py_version = sys.version.splitlines()
-    print("Python {}".format(py_version[0].strip()), file=out)
+    print(f"Python {py_version[0].strip()}", file=out)
     for py_version in py_version[1:]:
-        print("       {}".format(py_version.strip()), file=out)
+        print(f"       {py_version.strip()}", file=out)
     print("-" * 68, file=out)
     print(
-        "Python modules loaded from {}".format(os.path.dirname(Image.__file__)),
+        f"Python modules loaded from {os.path.dirname(Image.__file__)}",
         file=out,
     )
     print(
-        "Binary modules loaded from {}".format(os.path.dirname(Image.core.__file__)),
+        f"Binary modules loaded from {os.path.dirname(Image.core.__file__)}",
         file=out,
     )
     print("-" * 68, file=out)
@@ -147,15 +147,13 @@ def pilinfo(out=None, supported_formats=True):
             extensions[i].append(ext)
 
         for i in sorted(Image.ID):
-            line = "{}".format(i)
+            line = f"{i}"
             if i in Image.MIME:
-                line = "{} {}".format(line, Image.MIME[i])
+                line = f"{line} {Image.MIME[i]}"
             print(line, file=out)
 
             if i in extensions:
-                print(
-                    "Extensions: {}".format(", ".join(sorted(extensions[i]))), file=out
-                )
+                print(f'Extensions: {", ".join(sorted(extensions[i]))}', file=out)
 
             features = []
             if i in Image.OPEN:
@@ -169,5 +167,5 @@ def pilinfo(out=None, supported_formats=True):
             if i in Image.ENCODERS:
                 features.append("encode")
 
-            print("Features: {}".format(", ".join(features)), file=out)
+            print(f'Features: {", ".join(features)}', file=out)
             print("-" * 68, file=out)

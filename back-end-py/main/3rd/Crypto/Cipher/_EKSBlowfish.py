@@ -68,7 +68,7 @@ def _create_base_cipher(dict_parameters):
         salt = dict_parameters.pop("salt")
         cost = dict_parameters.pop("cost")
     except KeyError as e:
-        raise TypeError("Missing EKSBlowfish parameter: " + str(e))
+        raise TypeError(f"Missing EKSBlowfish parameter: {str(e)}")
     invert = dict_parameters.pop("invert", True)
 
     if len(key) not in key_size:
@@ -78,14 +78,15 @@ def _create_base_cipher(dict_parameters):
     stop_operation = _raw_blowfish_lib.EKSBlowfish_stop_operation
 
     void_p = VoidPointer()
-    result = start_operation(c_uint8_ptr(key),
-                             c_size_t(len(key)),
-                             c_uint8_ptr(salt),
-                             c_size_t(len(salt)),
-                             c_uint(cost),
-                             c_uint(int(invert)),
-                             void_p.address_of())
-    if result:
+    if result := start_operation(
+        c_uint8_ptr(key),
+        c_size_t(len(key)),
+        c_uint8_ptr(salt),
+        c_size_t(len(salt)),
+        c_uint(cost),
+        c_uint(int(invert)),
+        void_p.address_of(),
+    ):
         raise ValueError("Error %X while instantiating the EKSBlowfish cipher"
                          % result)
     return SmartPointer(void_p.get(), stop_operation)

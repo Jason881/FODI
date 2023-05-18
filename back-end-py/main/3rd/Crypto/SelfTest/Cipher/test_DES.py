@@ -311,15 +311,11 @@ class RonRivestTest(unittest.TestCase):
         from binascii import b2a_hex
 
         X = []
-        X[0:] = [b'\x94\x74\xB8\xE8\xC7\x3B\xCA\x7D']
+        X[:] = [b'\x94\x74\xB8\xE8\xC7\x3B\xCA\x7D']
 
         for i in range(16):
             c = DES.new(X[i],DES.MODE_ECB)
-            if not (i&1): # (num&1) returns 1 for odd numbers
-                X[i+1:] = [c.encrypt(X[i])] # even
-            else:
-                X[i+1:] = [c.decrypt(X[i])] # odd
-
+            X[i+1:] = [c.encrypt(X[i])] if not (i&1) else [c.decrypt(X[i])]
         self.assertEqual(b2a_hex(X[16]),
             b2a_hex(b'\x1B\x1A\x2D\xDB\x4C\x64\x24\x38'))
 

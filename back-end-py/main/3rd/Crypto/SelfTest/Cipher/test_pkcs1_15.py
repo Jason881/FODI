@@ -231,10 +231,10 @@ class TestVectorsWycheproof(unittest.TestCase):
     def warn(self, tv):
         if tv.warning and self._wycheproof_warnings:
             import warnings
-            warnings.warn("Wycheproof warning: %s (%s)" % (self._id, tv.comment))
+            warnings.warn(f"Wycheproof warning: {self._id} ({tv.comment})")
 
     def test_decrypt(self, tv):
-        self._id = "Wycheproof Decrypt PKCS#1v1.5 Test #%s" % tv.id
+        self._id = f"Wycheproof Decrypt PKCS#1v1.5 Test #{tv.id}"
 
         cipher = PKCS.new(tv.rsa_key)
         try:

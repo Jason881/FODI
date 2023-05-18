@@ -316,8 +316,8 @@ class Shamir(object):
             inv = coeff_0_l.inverse()
 
             for m in range(k):
-                x_m = shares[m][0]
                 if m != j:
+                    x_m = shares[m][0]
                     t = x_m * (x_j + x_m).inverse()
                     coeff_0_l *= t
             result += y_j * coeff_0_l * inv

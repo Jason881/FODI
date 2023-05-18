@@ -39,11 +39,9 @@ from Crypto.Util._file_system import pycryptodome_filename
 if sys.version_info[0] < 3:
 
     import imp
-    extension_suffixes = []
-    for ext, mod, typ in imp.get_suffixes():
-        if typ == imp.C_EXTENSION:
-            extension_suffixes.append(ext)
-
+    extension_suffixes = [
+        ext for ext, mod, typ in imp.get_suffixes() if typ == imp.C_EXTENSION
+    ]
 else:
 
     from importlib import machinery
@@ -120,9 +118,9 @@ try:
             size = max(len(init_or_size) + 1, size)
             result = ffi.new("uint8_t[]", size)
             result[:] = init_or_size
+        elif size:
+            raise ValueError("Size must be specified once only")
         else:
-            if size:
-                raise ValueError("Size must be specified once only")
             result = ffi.new("uint8_t[]", init_or_size)
         return result
 
@@ -141,7 +139,7 @@ try:
         elif byte_string(data) or isinstance(data, _Array):
             return data
         else:
-            raise TypeError("Object type %s cannot be passed to C code" % type(data))
+            raise TypeError(f"Object type {type(data)} cannot be passed to C code")
 
     class VoidPointer_cffi(_VoidPointer):
         """Model a newly allocated pointer to void"""
@@ -176,7 +174,7 @@ except ImportError:
         if "." not in name and not linkage.startswith("Win"):
             full_name = find_library(name)
             if full_name is None:
-                raise OSError("Cannot load library '%s'" % name)
+                raise OSError(f"Cannot load library '{name}'")
             name = full_name
         return CDLL(name)
 
@@ -235,7 +233,7 @@ except ImportError:
             finally:
                 _PyBuffer_Release(byref(buf))
         else:
-            raise TypeError("Object type %s cannot be passed to C code" % type(data))
+            raise TypeError(f"Object type {type(data)} cannot be passed to C code")
 
     # ---
 
@@ -299,8 +297,8 @@ def load_pycryptodome_raw_lib(name, cdecl):
             return load_lib(pycryptodome_filename(dir_comps, filename),
                             cdecl)
         except OSError as exp:
-            attempts.append("Trying '%s': %s" % (filename, str(exp)))
-    raise OSError("Cannot load native module '%s': %s" % (name, ", ".join(attempts)))
+            attempts.append(f"Trying '{filename}': {str(exp)}")
+    raise OSError(f"""Cannot load native module '{name}': {", ".join(attempts)}""")
 
 
 if sys.version_info[:2] != (2, 6):
