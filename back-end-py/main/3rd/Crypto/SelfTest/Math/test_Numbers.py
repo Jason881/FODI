@@ -73,7 +73,7 @@ class TestIntegerBase(unittest.TestCase):
         v6 = Integer(v1)
         self.assertEqual(v1, v6)
 
-        self.failIf(Integer(0) == None)
+        self.failIf(Integer(0) is None)
 
     def test_conversion_to_int(self):
         v1, v2 = self.Integers(-23, 2 ** 1000)
@@ -724,11 +724,11 @@ class testIntegerRandom(unittest.TestCase):
 
         func = IntegerNative.random_range
 
-        for x in range(200):
+        for _ in range(200):
             a = func(min_inclusive=1, max_inclusive=15)
             self.failUnless(1 <= a <= 15)
 
-        for x in range(200):
+        for _ in range(200):
             a = func(min_inclusive=1, max_exclusive=15)
             self.failUnless(1 <= a < 15)
 

@@ -170,12 +170,8 @@ class ImageCmsProfile:
     def _set(self, profile, filename=None):
         self.profile = profile
         self.filename = filename
-        if profile:
-            self.product_name = None  # profile.product_name
-            self.product_info = None  # profile.product_info
-        else:
-            self.product_name = None
-            self.product_info = None
+        self.product_info = None  # profile.product_info
+        self.product_name = None  # profile.product_name
 
     def tobytes(self):
         """
@@ -263,9 +259,7 @@ def get_display_profile(handle=None):
         profile = core.get_display_profile_win32(handle, 1)
     else:
         profile = core.get_display_profile_win32(handle or 0)
-    if profile is None:
-        return None
-    return ImageCmsProfile(profile)
+    return None if profile is None else ImageCmsProfile(profile)
 
 
 # --------------------------------------------------------------------.
@@ -348,7 +342,7 @@ def profileToProfile(
         raise PyCMSError("renderingIntent must be an integer between 0 and 3")
 
     if not isinstance(flags, int) or not (0 <= flags <= _MAX_FLAG):
-        raise PyCMSError("flags must be an integer between 0 and %s" + _MAX_FLAG)
+        raise PyCMSError(f"flags must be an integer between 0 and %s{_MAX_FLAG}")
 
     try:
         if not isinstance(inputProfile, ImageCmsProfile):
@@ -463,7 +457,7 @@ def buildTransform(
         raise PyCMSError("renderingIntent must be an integer between 0 and 3")
 
     if not isinstance(flags, int) or not (0 <= flags <= _MAX_FLAG):
-        raise PyCMSError("flags must be an integer between 0 and %s" + _MAX_FLAG)
+        raise PyCMSError(f"flags must be an integer between 0 and %s{_MAX_FLAG}")
 
     try:
         if not isinstance(inputProfile, ImageCmsProfile):
@@ -565,7 +559,7 @@ def buildProofTransform(
         raise PyCMSError("renderingIntent must be an integer between 0 and 3")
 
     if not isinstance(flags, int) or not (0 <= flags <= _MAX_FLAG):
-        raise PyCMSError("flags must be an integer between 0 and %s" + _MAX_FLAG)
+        raise PyCMSError(f"flags must be an integer between 0 and %s{_MAX_FLAG}")
 
     try:
         if not isinstance(inputProfile, ImageCmsProfile):
@@ -673,17 +667,14 @@ def createProfile(colorSpace, colorTemp=-1):
 
     if colorSpace not in ["LAB", "XYZ", "sRGB"]:
         raise PyCMSError(
-            "Color space not supported for on-the-fly profile creation (%s)"
-            % colorSpace
+            f"Color space not supported for on-the-fly profile creation ({colorSpace})"
         )
 
     if colorSpace == "LAB":
         try:
             colorTemp = float(colorTemp)
         except (TypeError, ValueError):
-            raise PyCMSError(
-                'Color temperature must be numeric, "%s" not valid' % colorTemp
-            )
+            raise PyCMSError(f'Color temperature must be numeric, "{colorTemp}" not valid')
 
     try:
         return core.createProfile(colorSpace, colorTemp)
@@ -723,12 +714,14 @@ def getProfileName(profile):
         model = profile.profile.model
         manufacturer = profile.profile.manufacturer
 
-        if not (model or manufacturer):
+        if model or manufacturer:
+            return (
+                model + "\n"
+                if not manufacturer or len(model) > 30
+                else f"{model} - {manufacturer}\n"
+            )
+        else:
             return (profile.profile.profile_description or "") + "\n"
-        if not manufacturer or len(model) > 30:
-            return model + "\n"
-        return "{} - {}\n".format(model, manufacturer)
-
     except (AttributeError, OSError, TypeError, ValueError) as v:
         raise PyCMSError(v)
 
@@ -763,10 +756,7 @@ def getProfileInfo(profile):
         # info was description \r\n\r\n copyright \r\n\r\n K007 tag \r\n\r\n whitepoint
         description = profile.profile.profile_description
         cpright = profile.profile.copyright
-        arr = []
-        for elt in (description, cpright):
-            if elt:
-                arr.append(elt)
+        arr = [elt for elt in (description, cpright) if elt]
         return "\r\n\r\n".join(arr) + "\r\n\r\n"
 
     except (AttributeError, OSError, TypeError, ValueError) as v:
@@ -969,10 +959,7 @@ def isIntentSupported(profile, intent, direction):
             profile = ImageCmsProfile(profile)
         # FIXME: I get different results for the same data w. different
         # compilers.  Bug in LittleCMS or in the binding?
-        if profile.profile.is_intent_supported(intent, direction):
-            return 1
-        else:
-            return -1
+        return 1 if profile.profile.is_intent_supported(intent, direction) else -1
     except (AttributeError, OSError, TypeError, ValueError) as v:
         raise PyCMSError(v)
 

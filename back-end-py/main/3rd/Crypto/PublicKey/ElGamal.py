@@ -218,17 +218,12 @@ class ElGamalKey(object):
         v1=pow(self.y, sig[0], self.p)
         v1=(v1*pow(sig[0], sig[1], self.p)) % self.p
         v2=pow(self.g, M, self.p)
-        if v1==v2:
-            return 1
-        return 0
+        return 1 if v1==v2 else 0
 
     def has_private(self):
         """Whether this is an ElGamal private key"""
 
-        if hasattr(self, 'x'):
-            return 1
-        else:
-            return 0
+        return 1 if hasattr(self, 'x') else 0
 
     def can_encrypt(self):
         return True

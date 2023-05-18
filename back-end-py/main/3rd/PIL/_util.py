@@ -1,7 +1,7 @@
 import os
 import sys
 
-py36 = sys.version_info[0:2] >= (3, 6)
+py36 = sys.version_info[:2] >= (3, 6)
 
 
 if py36:

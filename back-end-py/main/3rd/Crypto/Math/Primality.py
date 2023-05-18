@@ -67,7 +67,7 @@ def miller_rabin_test(candidate, iterations, randfunc=None):
 
     if candidate in (1, 2, 3, 5):
         return PROBABLY_PRIME
-    
+
     if candidate.is_even():
         return COMPOSITE
 
@@ -87,8 +87,7 @@ def miller_rabin_test(candidate, iterations, randfunc=None):
     # Skip step 3
 
     # Step 4
-    for i in iter_range(iterations):
-
+    for _ in iter_range(iterations):
         # Step 4.1-2
         base = 1
         while base in (one, minus_one):
@@ -207,9 +206,7 @@ def lucas_test(candidate):
             U_i.set(U_temp)
             V_i.set(V_temp)
     # Step 7
-    if U_i == 0:
-        return PROBABLY_PRIME
-    return COMPOSITE
+    return PROBABLY_PRIME if U_i == 0 else COMPOSITE
 
 
 from Crypto.Util.number import sieve_base as _sieve_base_large
@@ -271,9 +268,7 @@ def test_probable_prime(candidate, randfunc=None):
     if miller_rabin_test(candidate, mr_iterations,
                          randfunc=randfunc) == COMPOSITE:
         return COMPOSITE
-    if lucas_test(candidate) == COMPOSITE:
-        return COMPOSITE
-    return PROBABLY_PRIME
+    return COMPOSITE if lucas_test(candidate) == COMPOSITE else PROBABLY_PRIME
 
 
 def generate_probable_prime(**kwargs):
@@ -314,7 +309,7 @@ def generate_probable_prime(**kwargs):
     randfunc = kwargs.pop("randfunc", None)
     prime_filter = kwargs.pop("prime_filter", lambda x: True)
     if kwargs:
-        raise ValueError("Unknown parameters: " + kwargs.keys())
+        raise ValueError(f"Unknown parameters: {kwargs.keys()}")
 
     if exact_bits is None:
         raise ValueError("Missing exact_bits parameter")
@@ -353,7 +348,7 @@ def generate_probable_safe_prime(**kwargs):
     exact_bits = kwargs.pop("exact_bits", None)
     randfunc = kwargs.pop("randfunc", None)
     if kwargs:
-        raise ValueError("Unknown parameters: " + kwargs.keys())
+        raise ValueError(f"Unknown parameters: {kwargs.keys()}")
 
     if randfunc is None:
         randfunc = Random.new().read

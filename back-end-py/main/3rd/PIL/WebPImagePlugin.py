@@ -91,9 +91,7 @@ class WebPImageFile(ImageFile.ImageFile):
         self.seek(0)
 
     def _getexif(self):
-        if "exif" not in self.info:
-            return None
-        return dict(self.getexif())
+        return None if "exif" not in self.info else dict(self.getexif())
 
     @property
     def n_frames(self):
@@ -171,21 +169,14 @@ class WebPImageFile(ImageFile.ImageFile):
         return super().load()
 
     def tell(self):
-        if not _webp.HAVE_WEBPANIM:
-            return super().tell()
-
-        return self.__logical_frame
+        return super().tell() if not _webp.HAVE_WEBPANIM else self.__logical_frame
 
 
 def _save_all(im, fp, filename):
     encoderinfo = im.encoderinfo.copy()
     append_images = list(encoderinfo.get("append_images", []))
 
-    # If total frame count is 1, then save using the legacy API, which
-    # will preserve non-alpha modes
-    total = 0
-    for ims in [im] + append_images:
-        total += getattr(ims, "n_frames", 1)
+    total = sum(getattr(ims, "n_frames", 1) for ims in [im] + append_images)
     if total == 1:
         _save(im, fp, filename)
         return
@@ -196,10 +187,7 @@ def _save_all(im, fp, filename):
     elif "background" in im.info:
         background = im.info["background"]
         if isinstance(background, int):
-            # GifImagePlugin stores a global color table index in
-            # info["background"]. So it must be converted to an RGBA value
-            palette = im.getpalette()
-            if palette:
+            if palette := im.getpalette():
                 r, g, b = palette[background * 3 : (background + 1) * 3]
                 background = (r, g, b, 0)
 
@@ -234,8 +222,7 @@ def _save_all(im, fp, filename):
         or not all(v >= 0 and v < 256 for v in background)
     ):
         raise OSError(
-            "Background color is not an RGBA tuple clamped to (0-255): %s"
-            % str(background)
+            f"Background color is not an RGBA tuple clamped to (0-255): {str(background)}"
         )
 
     # Convert to packed uint

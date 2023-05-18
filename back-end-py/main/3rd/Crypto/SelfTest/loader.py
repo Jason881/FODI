@@ -85,22 +85,21 @@ def _load_tests(dir_comps, file_in, description, conversions):
                 results.append(test_vector)
             test_vector = TestVector("%s (#%d)" % (description, count), count)
 
-        res = re.match("([A-Za-z0-9]+) = ?(.*)", line)
-        if not res:
-            test_vector.others += [line]
-        else:
-            token = res.group(1).lower()
-            data = res.group(2).lower()
+        if res := re.match("([A-Za-z0-9]+) = ?(.*)", line):
+            token = res[1].lower()
+            data = res[2].lower()
 
             conversion = conversions.get(token, None)
             if conversion is None:
                 if len(data) % 2 != 0:
-                    data = "0" + data
+                    data = f"0{data}"
                 setattr(test_vector, token, binascii.unhexlify(data))
             else:
                 setattr(test_vector, token, conversion(data))
 
-        # This line is ignored
+        else:
+            test_vector.others += [line]
+            # This line is ignored
     return results
 
 def load_tests(dir_comps, file_name, description, conversions):
@@ -112,7 +111,7 @@ def load_tests(dir_comps, file_name, description, conversions):
     For a group of lines, the object has one attribute per line.
     """
     
-    description = "%s test (%s)" % (description, file_name)
+    description = f"{description} test ({file_name})"
 
     with open(pycryptodome_filename(dir_comps, file_name)) as file_in:
         results = _load_tests(dir_comps, file_in, description, conversions)

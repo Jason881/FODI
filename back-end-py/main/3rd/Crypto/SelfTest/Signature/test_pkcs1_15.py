@@ -49,7 +49,7 @@ from Crypto.Util.strxor import strxor
 
 
 def load_hash_by_name(hash_name):
-    return __import__("Crypto.Hash." + hash_name, globals(), locals(), ["new"])
+    return __import__(f"Crypto.Hash.{hash_name}", globals(), locals(), ["new"])
 
 
 class FIPS_PKCS1_Verify_Tests(unittest.TestCase):
@@ -266,38 +266,38 @@ class TestVectorsWycheproof(unittest.TestCase):
             key = RSA.import_key(group['keyPem'])
 
             hash_name = group['sha']
-            if hash_name == "SHA-512":
+            if hash_name == "SHA-1":
+                hash_module = SHA1
+            elif hash_name == "SHA-224":
+                hash_module = SHA224
+            elif hash_name == "SHA-256":
+                hash_module = SHA256
+            elif hash_name == "SHA-384":
+                hash_module = SHA384
+            elif hash_name == "SHA-512":
                 hash_module = SHA512
             elif hash_name == "SHA-512/224":
                 hash_module = SHA512.new(truncate="224")
             elif hash_name == "SHA-512/256":
                 hash_module = SHA512.new(truncate="256")
-            elif hash_name == "SHA3-512":
-                hash_module = SHA3_512
-            elif hash_name == "SHA-384":
-                hash_module = SHA384
-            elif hash_name == "SHA3-384":
-                hash_module = SHA3_384
-            elif hash_name == "SHA-256":
-                hash_module = SHA256
-            elif hash_name == "SHA3-256":
-                hash_module = SHA3_256
-            elif hash_name == "SHA-224":
-                hash_module = SHA224
             elif hash_name == "SHA3-224":
                 hash_module = SHA3_224
-            elif hash_name == "SHA-1":
-                hash_module = SHA1
+            elif hash_name == "SHA3-256":
+                hash_module = SHA3_256
+            elif hash_name == "SHA3-384":
+                hash_module = SHA3_384
+            elif hash_name == "SHA3-512":
+                hash_module = SHA3_512
             else:
-                raise ValueError("Unknown hash algorithm: " + hash_name)
-            
+                raise ValueError(f"Unknown hash algorithm: {hash_name}")
+
             type_name = group['type']
             if type_name not in ("RsassaPkcs1Verify", "RsassaPkcs1Generate"):
-                raise ValueError("Unknown type name " + type_name)
-            
+                raise ValueError(f"Unknown type name {type_name}")
+
             for test in group['tests']:
                 tv = TestVector()
-                
+
                 tv.id = test['tcId']
                 tv.comment = test['comment']
                 for attr in 'msg', 'sig':
@@ -314,11 +314,11 @@ class TestVectorsWycheproof(unittest.TestCase):
     def warn(self, tv):
         if tv.warning and self._wycheproof_warnings:
             import warnings
-            warnings.warn("Wycheproof warning: %s (%s)" % (self._id, tv.comment))
+            warnings.warn(f"Wycheproof warning: {self._id} ({tv.comment})")
 
     def test_verify(self, tv):
-        self._id = "Wycheproof RSA PKCS$#1 Test #" + str(tv.id)
-        
+        self._id = f"Wycheproof RSA PKCS$#1 Test #{str(tv.id)}"
+
         hashed_msg = tv.hash_module.new(tv.msg)
         signer = pkcs1_15.new(tv.key)
         try:

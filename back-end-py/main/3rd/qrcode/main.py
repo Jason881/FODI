@@ -13,14 +13,12 @@ def make(data=None, **kwargs):
 
 def _check_version(version):
     if version < 1 or version > 40:
-        raise ValueError(
-            "Invalid version (was %s, expected 1 to 40)" % version)
+        raise ValueError(f"Invalid version (was {version}, expected 1 to 40)")
 
 
 def _check_box_size(size):
     if int(size) <= 0:
-        raise ValueError(
-            "Invalid box size (was %s, expected larger than 0)" % size)
+        raise ValueError(f"Invalid box size (was {size}, expected larger than 0)")
 
 
 def _check_mask_pattern(mask_pattern):
@@ -28,10 +26,10 @@ def _check_mask_pattern(mask_pattern):
         return
     if not isinstance(mask_pattern, int):
         raise TypeError(
-            "Invalid mask pattern (was %s, expected int)" % type(mask_pattern))
+            f"Invalid mask pattern (was {type(mask_pattern)}, expected int)"
+        )
     if mask_pattern < 0 or mask_pattern > 7:
-        raise ValueError(
-            "Mask pattern should be in range(8) (got %s)" % mask_pattern)
+        raise ValueError(f"Mask pattern should be in range(8) (got {mask_pattern})")
 
 
 class QRCode:
@@ -74,12 +72,11 @@ class QRCode:
         """
         if isinstance(data, util.QRData):
             self.data_list.append(data)
+        elif optimize:
+            self.data_list.extend(
+                util.optimal_data_chunks(data, minimum=optimize))
         else:
-            if optimize:
-                self.data_list.extend(
-                    util.optimal_data_chunks(data, minimum=optimize))
-            else:
-                self.data_list.append(util.QRData(data))
+            self.data_list.append(util.QRData(data))
         self.data_cache = None
 
     def make(self, fit=True):
@@ -134,12 +131,18 @@ class QRCode:
                 if col + c <= -1 or self.modules_count <= col + c:
                     continue
 
-                if (0 <= r and r <= 6 and (c == 0 or c == 6)
-                        or (0 <= c and c <= 6 and (r == 0 or r == 6))
-                        or (2 <= r and r <= 4 and 2 <= c and c <= 4)):
-                    self.modules[row + r][col + c] = True
-                else:
-                    self.modules[row + r][col + c] = False
+                self.modules[row + r][col + c] = (
+                    r >= 0
+                    and r <= 6
+                    and c in [0, 6]
+                    or c >= 0
+                    and c <= 6
+                    and r in [0, 6]
+                    or r >= 2
+                    and r <= 4
+                    and c >= 2
+                    and c <= 4
+                )
 
     def best_fit(self, start=None):
         """
@@ -253,9 +256,7 @@ class QRCode:
             if (invert and self.border and
                     max(x, y) >= modcount+self.border):
                 return 1
-            if min(x, y) < 0 or max(x, y) >= modcount:
-                return 0
-            return self.modules[x][y]
+            return 0 if min(x, y) < 0 or max(x, y) >= modcount else self.modules[x][y]
 
         for r in range(-self.border, modcount+self.border, 2):
             if tty:
@@ -284,10 +285,10 @@ class QRCode:
             assert issubclass(image_factory, BaseImage)
         else:
             image_factory = self.image_factory
-            if image_factory is None:
-                # Use PIL by default
-                from qrcode.image.pil import PilImage
-                image_factory = PilImage
+        if image_factory is None:
+            # Use PIL by default
+            from qrcode.image.pil import PilImage
+            image_factory = PilImage
 
         im = image_factory(
             self.border, self.modules_count, self.box_size, **kwargs)
@@ -325,11 +326,13 @@ class QRCode:
 
                     for c in range(-2, 3):
 
-                        if (r == -2 or r == 2 or c == -2 or c == 2 or
-                                (r == 0 and c == 0)):
-                            self.modules[row + r][col + c] = True
-                        else:
-                            self.modules[row + r][col + c] = False
+                        self.modules[row + r][col + c] = (
+                            r == -2
+                            or r == 2
+                            or c == -2
+                            or c == 2
+                            or (r == 0 and c == 0)
+                        )
 
     def setup_type_number(self, test):
         bits = util.BCH_type_number(self.version)
